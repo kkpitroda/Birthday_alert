@@ -1,0 +1,49 @@
+---
+
+- name: convert csv birthday data to json
+  hosts: localhost
+  connection: local
+  vars:
+    Birthday_data: "{{ lookup('file','Birthday_data.csv') | community.general.from_csv }}"
+
+
+  tasks:
+    - name: display
+      debug:
+        msg: "{{ Birthday_data }}"
+
+#    - name: set facts
+#      set_fact:
+#        birthday_data_json: "{{ Birthday_data | from_json }}"
+
+    - name: Creates an entry for birthday
+      ansible.builtin.cron:
+        name: "Birthday {{ item.Name }}"
+        month: "{{ item.Month }}"
+        day: "{{ item.Day }}"
+        hour: 11
+        minute: 30
+          #        special_time: "yearly"
+        job: ansible-playbook /home/ketan/ansible/birthday_wish.yaml -e '{"Bth_name":"{{ item.Preffered }}","Bth_email":"{{item.Email}}","Bth_month":"{{ item.Month }}","Bth_day":"{{item.Day}}"}'
+      loop: "{{ Birthday_data }}"
+
+
+#
+#   - name: send alert on slack from local system
+#  hosts: localhost
+#  connection: local
+#
+#  tasks: 
+#      - name: Send an e-mail alert
+#        mail:
+#              host: localhost
+#              port: 25
+#              from: Birthday_Celebrations@smtpemail.com
+#              to: {{ email }}
+#              subject: Birthday Wishes
+#              body: '|
+#                Hello "{{ Preffered }}"
+#                Happy Birthday !!!
+#                Regards,
+#                LAD Lift Service'
+#              secure: starttls
